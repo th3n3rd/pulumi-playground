@@ -1,6 +1,6 @@
-import { InlineProgramArgs, LocalWorkspace, LocalWorkspaceOptions, PulumiFn } from "@pulumi/pulumi/automation"
+import { ConfigMap, InlineProgramArgs, LocalWorkspace, LocalWorkspaceOptions, PulumiFn } from "@pulumi/pulumi/automation"
 
-export const deploy = async (program: PulumiFn, backendUrl: string, envVars: Record<string, string> = {}) => {
+export const deploy = async (program: PulumiFn, backendUrl: string, envVars: Record<string, string> = {}, providerConfig: ConfigMap = {}) => {
     const args: InlineProgramArgs = {
         stackName: "local",
         projectName: "playground",
@@ -17,9 +17,7 @@ export const deploy = async (program: PulumiFn, backendUrl: string, envVars: Rec
         envVars: envVars
     }
     const stack = await LocalWorkspace.createStack(args, options)
+    await stack.setAllConfig(providerConfig)
     const result = await stack.up()
-    return {
-        result: result,
-        resources: (await stack.exportStack()).deployment.resources
-    }
+    return result
 }
