@@ -1,8 +1,6 @@
 import { UpResult } from "@pulumi/pulumi/automation"
-import { randomUUID } from "crypto"
-import Dockerode from "dockerode"
-import * as fs from "fs"
 import { deploy } from "./automation"
+import { ephemeralLocalstack, ephemeralStateBackend } from "./test-utils"
 import { infrastructure } from "./infrastructure"
 
 describe("Infrastructure", () => {
@@ -52,37 +50,6 @@ describe("Infrastructure", () => {
         )
     }
 
-    function ephemeralStateBackend() {
-        const dirPath = `${__dirname}/test-${randomUUID()}`
-        beforeAll(() => fs.mkdirSync(dirPath))
-        afterAll(() => fs.rmSync(dirPath, { recursive: true, force: true }))
-        return `file://${dirPath}`
-    }
-
-    function ephemeralLocalstack() {
-        const docker = new Dockerode()
-        const creation = docker.createContainer({
-            Image: "localstack/localstack",
-            Tty: true,
-            ExposedPorts: {
-                "4566/tcp": {}
-            },
-            HostConfig: {
-                PortBindings: {
-                    "4566/tcp": [{ "HostPort": "4566/tcp" }]
-                }
-            }
-        })
-        let container: Dockerode.Container
-        beforeAll(async () => {
-            container = await creation
-            await container.start()
-        })
-        afterAll(async () => {
-            await container.remove({ force: true })
-        })
-        return "http://localhost:4566"
-    }
-
 })
+
 
