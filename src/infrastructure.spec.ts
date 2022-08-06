@@ -1,7 +1,7 @@
 import { UpResult } from "@pulumi/pulumi/automation"
-import { deploy } from "./automation"
-import { ephemeralLocalstack, ephemeralStateBackend } from "./test-utils"
+import { AutomationArgs, deploy } from "./automation"
 import { infrastructure } from "./infrastructure"
+import { ephemeralLocalstack, ephemeralStateBackend } from "./test-utils"
 
 describe("Infrastructure", () => {
     const localstackEndpoint = ephemeralLocalstack()
@@ -26,13 +26,17 @@ describe("Infrastructure", () => {
     }
 
     async function deployInfrastructure() {
-        return deploy(
-            infrastructure,
-            stateBackend,
-            {
+        return deploy(automationArgs())
+    }
+
+    function automationArgs(): AutomationArgs {
+        return {
+            inlineProgram: infrastructure,
+            backendUrl: stateBackend,
+            envVars: {
                 PULUMI_CONFIG_PASSPHRASE: "irrelevant"
             },
-            {
+            providerConfig: {
                 "aws:region": { value: "eu-west-1" },
                 "aws:accessKey": { value: "test", secret: true },
                 "aws:secretKey": { value: "test", secret: true },
@@ -46,10 +50,9 @@ describe("Infrastructure", () => {
                         }
                     ])
                 }
-            }
-        )
+            },
+        }
     }
-
 })
 
 
