@@ -4,7 +4,7 @@ import { infrastructure } from "./infrastructure"
 import { ephemeralLocalstack, ephemeralStateBackend } from "./test-utils"
 
 describe("Infrastructure", () => {
-    const localstackEndpoint = ephemeralLocalstack()
+    const resolveLocalstackEndpoint = ephemeralLocalstack()
     const stateBackend = ephemeralStateBackend()
     const testTimeout = 120_000
     let deployment: UpResult
@@ -26,10 +26,10 @@ describe("Infrastructure", () => {
     }
 
     async function deployInfrastructure() {
-        return deploy(automationArgs())
+        return deploy(await automationArgs())
     }
 
-    function automationArgs(): AutomationArgs {
+    async function automationArgs(): Promise<AutomationArgs> {
         return {
             inlineProgram: infrastructure,
             backendUrl: stateBackend,
@@ -46,7 +46,7 @@ describe("Infrastructure", () => {
                 "aws:endpoints": {
                     value: JSON.stringify([
                         {
-                            "s3": localstackEndpoint
+                            "s3": await resolveLocalstackEndpoint()
                         }
                     ])
                 }

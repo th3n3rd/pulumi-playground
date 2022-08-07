@@ -2,25 +2,25 @@ import Dockerode from "dockerode"
 import { randomUUID } from "crypto"
 import * as fs from "fs"
 
-export function ephemeralLocalstack() {
-    const docker = new Dockerode()
-    const creation = docker.createContainer({
-        Image: "localstack/localstack",
-        Tty: true,
-        ExposedPorts: {
-            "4566/tcp": {}
-        },
-        HostConfig: {
-            PortBindings: {
-                "4566/tcp": [{ "HostPort": "4566/tcp" }]
-            }
-        }
-    })
-    
+type LocalstackEndpointResolver = () => Promise<string>
+
+export function ephemeralLocalstack(): LocalstackEndpointResolver { 
     let container: Dockerode.Container
+    const docker = new Dockerode()  
     
     beforeAll(async () => {
-        container = await creation
+        container = await docker.createContainer({
+            Image: "localstack/localstack",
+            Tty: true,
+            ExposedPorts: {
+                "4566/tcp": {}
+            },
+            HostConfig: {
+                PortBindings: {
+                    "4566/tcp": [{ "HostPort": "0" }]
+                }
+            }
+        })
         await container.start()
     })
     
@@ -28,7 +28,11 @@ export function ephemeralLocalstack() {
         await container.remove({ force: true })
     })
     
-    return "http://localhost:4566"
+    return async () => {
+        const info = await container.inspect()
+        const port = info.NetworkSettings.Ports["4566/tcp"][0].HostPort
+        return `http://localhost:${port}`
+    }
 }
 
 export function ephemeralStateBackend() {
