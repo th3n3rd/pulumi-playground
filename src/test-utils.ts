@@ -1,6 +1,8 @@
 import Dockerode from "dockerode"
 import { randomUUID } from "crypto"
 import * as fs from "fs"
+import { deploy } from "./automation"
+import { PulumiFn } from "@pulumi/pulumi/automation"
 
 type LocalstackEndpointResolver = () => Promise<string>
 
@@ -40,4 +42,35 @@ export function ephemeralStateBackend() {
     beforeAll(() => fs.mkdirSync(dirPath))
     afterAll(() => fs.rmSync(dirPath, { recursive: true, force: true }))
     return `file://${dirPath}`
+}
+
+export async function deployToLocalstack(
+    inlineProgram: PulumiFn,
+    stateBackend: string,
+    localstackEndpoint: string
+) {
+    return deploy(
+        {
+            inlineProgram: inlineProgram,
+            backendUrl: stateBackend,
+            envVars: {
+                PULUMI_CONFIG_PASSPHRASE: "irrelevant"
+            },
+            providerConfig: {
+                "aws:region": { value: "eu-west-1" },
+                "aws:accessKey": { value: "test", secret: true },
+                "aws:secretKey": { value: "test", secret: true },
+                "aws:skipCredentialsValidation": { value: "true" },
+                "aws:skipRequestingAccountId": { value: "true" },
+                "aws:s3ForcePathStyle": { value: "true" },
+                "aws:endpoints": {
+                    value: JSON.stringify([
+                        {
+                            "s3": localstackEndpoint
+                        }
+                    ])
+                }
+            },
+        }
+    )
 }

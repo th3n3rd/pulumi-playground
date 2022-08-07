@@ -1,7 +1,6 @@
 import { UpResult } from "@pulumi/pulumi/automation"
-import { AutomationArgs, deploy } from "./automation"
 import { infrastructure } from "./infrastructure"
-import { ephemeralLocalstack, ephemeralStateBackend } from "./test-utils"
+import { deployToLocalstack, ephemeralLocalstack, ephemeralStateBackend } from "./test-utils"
 
 describe("Infrastructure", () => {
     const resolveLocalstackEndpoint = ephemeralLocalstack()
@@ -10,7 +9,11 @@ describe("Infrastructure", () => {
     let deployment: UpResult
 
     beforeAll(async () => {
-        deployment = await deployInfrastructure()
+        deployment = await deployToLocalstack(
+            infrastructure,
+            stateBackend,
+            await resolveLocalstackEndpoint()
+        )
     }, testTimeout)
 
     it("creates the playground stack successfully", () => {
@@ -25,34 +28,6 @@ describe("Infrastructure", () => {
         expect(deployment.stdout).toContain(message)
     }
 
-    async function deployInfrastructure() {
-        return deploy(await automationArgs())
-    }
-
-    async function automationArgs(): Promise<AutomationArgs> {
-        return {
-            inlineProgram: infrastructure,
-            backendUrl: stateBackend,
-            envVars: {
-                PULUMI_CONFIG_PASSPHRASE: "irrelevant"
-            },
-            providerConfig: {
-                "aws:region": { value: "eu-west-1" },
-                "aws:accessKey": { value: "test", secret: true },
-                "aws:secretKey": { value: "test", secret: true },
-                "aws:skipCredentialsValidation": { value: "true" },
-                "aws:skipRequestingAccountId": { value: "true" },
-                "aws:s3ForcePathStyle": { value: "true" },
-                "aws:endpoints": {
-                    value: JSON.stringify([
-                        {
-                            "s3": await resolveLocalstackEndpoint()
-                        }
-                    ])
-                }
-            },
-        }
-    }
 })
 
 
