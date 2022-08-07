@@ -27,3 +27,5 @@ The tests will setup an ephemeral Localstack instance using docker, as well as e
 ## Caveats
 
 This project relies on the OSS version of Localstack which offers a limited set of AWS services, that being said the offering is anyway good enough to cover most common use cases.
+
+Keep in mind that IAM policies are not evaluated or enforced (i.e. operations are all allowed, none are denied) in the OSS version.
