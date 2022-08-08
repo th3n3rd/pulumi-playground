@@ -1,8 +1,8 @@
 import { UpResult } from "@pulumi/pulumi/automation"
-import { infrastructure } from "./infrastructure"
-import { deployToLocalstack, ephemeralLocalstack, ephemeralStateBackend } from "./test-utils"
+import { resources } from "./resources"
+import { deployToLocalstack, ephemeralLocalstack, ephemeralStateBackend } from "../../test-utils"
 
-describe("Infrastructure", () => {
+describe("Simple creation of an S3 bucket", () => {
     const resolveLocalstackEndpoint = ephemeralLocalstack()
     const stateBackend = ephemeralStateBackend()
     const testTimeout = 120_000
@@ -10,15 +10,11 @@ describe("Infrastructure", () => {
 
     beforeAll(async () => {
         deployment = await deployToLocalstack(
-            infrastructure,
+            resources,
             stateBackend,
             await resolveLocalstackEndpoint()
         )
     }, testTimeout)
-
-    it("creates the playground stack successfully", () => {
-        expectResultToContain("Stack playground-local created")
-    })
 
     it("creates an s3 bucket successfully", () => {
         expectResultToContain("Bucket my-bucket created")

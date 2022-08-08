@@ -1,5 +1,5 @@
 import * as aws from "@pulumi/aws"
 
-export const infrastructure = async () => {
+export const resources = async () => {
     new aws.s3.Bucket("my-bucket")
 }
