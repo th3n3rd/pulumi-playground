@@ -3,6 +3,7 @@ import { randomUUID } from "crypto"
 import * as fs from "fs"
 import { deploy } from "./automation"
 import { PulumiFn } from "@pulumi/pulumi/automation"
+import waitOn from "wait-on"
 
 type LocalstackEndpointResolver = () => Promise<string>
 
@@ -33,7 +34,11 @@ export function ephemeralLocalstack(): LocalstackEndpointResolver {
     return async () => {
         const info = await container.inspect()
         const port = info.NetworkSettings.Ports["4566/tcp"][0].HostPort
-        return `http://localhost:${port}`
+        const endpoint = `http://localhost:${port}`
+        await waitOn({
+            resources: [endpoint]
+        });
+        return endpoint;
     }
 }
 
